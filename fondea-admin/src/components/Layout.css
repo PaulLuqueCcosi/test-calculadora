@@ -4,7 +4,7 @@
 }
 
 .sidebar {
-  width: 250px;
+  width: 280px;
   background: #2c3e50;
   color: white;
   padding: 20px;
@@ -14,28 +14,55 @@
 .sidebar h2 {
   margin-bottom: 30px;
   font-size: 24px;
+  text-align: center;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #34495e;
+}
+
+.menu-section {
+  margin-bottom: 25px;
+}
+
+.section-title {
+  color: #95a5a6;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+  padding-left: 10px;
 }
 
 .sidebar ul {
   list-style: none;
   padding: 0;
+  margin: 0;
 }
 
 .sidebar li {
-  margin-bottom: 10px;
+  margin-bottom: 5px;
 }
 
 .sidebar a {
   color: #ecf0f1;
   text-decoration: none;
-  display: block;
-  padding: 10px;
-  border-radius: 5px;
-  transition: background 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  font-size: 14px;
 }
 
 .sidebar a:hover {
   background: #34495e;
+  padding-left: 16px;
+}
+
+.sidebar a.active {
+  background: #3498db;
+  font-weight: 600;
 }
 
 .content {
@@ -43,4 +70,22 @@
   padding: 30px;
   overflow-y: auto;
   background: #ecf0f1;
+}
+
+/* Scrollbar personalizado para el sidebar */
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: #34495e;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: #7f8c8d;
+  border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: #95a5a6;
 }

@@ -15,6 +15,27 @@ npm run dev
 
 3. Abrir en el navegador: `http://localhost:5173`
 
+## Navegación del Panel
+
+El menú lateral está organizado en 4 secciones para facilitar la navegación:
+
+### 🏠 Principal
+- **Dashboard**: Vista general con accesos rápidos
+- **Simulador**: Simula préstamos con todas las configuraciones
+
+### 📦 Productos
+- **Productos**: Gestiona los productos de préstamo
+- **Montos**: Define montos disponibles por producto
+- **Plazos**: Configura plazos de pago
+
+### 💳 Comisiones (Fees)
+- **Definiciones**: Crea tipos de comisiones (TECH_FEE, ADMIN_FEE, etc.)
+- **Configuración**: Asocia fees a productos con valores específicos
+
+### 🎁 Descuentos
+- **Definiciones**: Crea tipos de descuentos
+- **Configuración**: Asocia descuentos a productos
+
 ## Configuración del Backend
 
 Asegúrate de que el backend esté corriendo en `http://localhost:8080`

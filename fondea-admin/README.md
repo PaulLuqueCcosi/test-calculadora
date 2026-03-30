@@ -13,6 +13,28 @@ Panel de administración para gestionar productos, comisiones, descuentos y simu
 - ✅ Simulador de Préstamos con cálculo completo
 - ✅ Filtros en tablas para búsqueda rápida
 - ✅ Interfaz funcional y responsive
+- ✅ Menú organizado por secciones con iconos
+
+## Navegación
+
+El menú lateral está organizado en 4 secciones claras:
+
+### 🏠 Principal
+- Dashboard
+- Simulador
+
+### 📦 Productos
+- Productos
+- Montos
+- Plazos
+
+### 💳 Comisiones (Fees)
+- Definiciones
+- Configuración
+
+### 🎁 Descuentos
+- Definiciones
+- Configuración
 
 ## Requisitos
 

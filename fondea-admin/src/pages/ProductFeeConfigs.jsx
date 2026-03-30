@@ -3,6 +3,7 @@ import { productFeeConfigService } from '../services/feeService';
 import { feeDefinitionService } from '../services/feeService';
 import { productService, productAmountService, productTermService } from '../services/productService';
 import './CrudPage.css';
+import './ConfigPage.css';
 
 const CALCULATION_TYPES = ['PERCENTAGE', 'FIXED_AMOUNT'];
 
@@ -78,8 +79,14 @@ function ProductFeeConfigs() {
       calculationType: config.calculationType,
       value: config.value,
       isActive: config.isActive,
-      applicableAmountIds: config.applicableAmounts?.map(a => a.id) || [],
-      applicableTermIds: config.applicableTerms?.map(t => t.id) || []
+      applicableAmountIds: config.applicableAmounts?.map(a => {
+        const amount = amounts.find(am => am.amount === a.value && am.productId === config.productId);
+        return amount?.id;
+      }).filter(Boolean) || [],
+      applicableTermIds: config.applicableTerms?.map(t => {
+        const term = terms.find(tm => tm.termDays === t.value && tm.productId === config.productId);
+        return term?.id;
+      }).filter(Boolean) || []
     });
     setShowForm(true);
   };
@@ -115,11 +122,47 @@ function ProductFeeConfigs() {
   );
 
   const getProductAmounts = () => {
-    return amounts.filter(a => a.productId === formData.productId);
+    return amounts.filter(a => a.productId === formData.productId && a.isActive);
   };
 
   const getProductTerms = () => {
-    return terms.filter(t => t.productId === formData.productId);
+    return terms.filter(t => t.productId === formData.productId && t.isActive);
+  };
+
+  const toggleAmount = (amountId) => {
+    setFormData(prev => ({
+      ...prev,
+      applicableAmountIds: prev.applicableAmountIds.includes(amountId)
+        ? prev.applicableAmountIds.filter(id => id !== amountId)
+        : [...prev.applicableAmountIds, amountId]
+    }));
+  };
+
+  const toggleTerm = (termId) => {
+    setFormData(prev => ({
+      ...prev,
+      applicableTermIds: prev.applicableTermIds.includes(termId)
+        ? prev.applicableTermIds.filter(id => id !== termId)
+        : [...prev.applicableTermIds, termId]
+    }));
+  };
+
+  const selectAllAmounts = () => {
+    const allAmountIds = getProductAmounts().map(a => a.id);
+    setFormData(prev => ({ ...prev, applicableAmountIds: allAmountIds }));
+  };
+
+  const clearAllAmounts = () => {
+    setFormData(prev => ({ ...prev, applicableAmountIds: [] }));
+  };
+
+  const selectAllTerms = () => {
+    const allTermIds = getProductTerms().map(t => t.id);
+    setFormData(prev => ({ ...prev, applicableTermIds: allTermIds }));
+  };
+
+  const clearAllTerms = () => {
+    setFormData(prev => ({ ...prev, applicableTermIds: [] }));
   };
 
   if (loading) return <div>Cargando...</div>;
@@ -135,55 +178,61 @@ function ProductFeeConfigs() {
 
       {showForm && (
         <form onSubmit={handleSubmit} className="form-card">
-          <div className="form-group">
-            <label>Producto:</label>
-            <select
-              value={formData.productId}
-              onChange={(e) => setFormData({ ...formData, productId: e.target.value })}
-              required
-            >
-              <option value="">Seleccionar producto</option>
-              {products.map(p => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
+          <div className="form-row">
+            <div className="form-group">
+              <label>Producto:</label>
+              <select
+                value={formData.productId}
+                onChange={(e) => setFormData({ ...formData, productId: e.target.value, applicableAmountIds: [], applicableTermIds: [] })}
+                required
+              >
+                <option value="">Seleccionar producto</option>
+                {products.map(p => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Fee:</label>
+              <select
+                value={formData.feeDefinitionCode}
+                onChange={(e) => setFormData({ ...formData, feeDefinitionCode: e.target.value })}
+                required
+              >
+                <option value="">Seleccionar fee</option>
+                {fees.map(f => (
+                  <option key={f.code} value={f.code}>{f.name} ({f.code})</option>
+                ))}
+              </select>
+            </div>
           </div>
-          <div className="form-group">
-            <label>Fee:</label>
-            <select
-              value={formData.feeDefinitionCode}
-              onChange={(e) => setFormData({ ...formData, feeDefinitionCode: e.target.value })}
-              required
-            >
-              <option value="">Seleccionar fee</option>
-              {fees.map(f => (
-                <option key={f.code} value={f.code}>{f.name} ({f.code})</option>
-              ))}
-            </select>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label>Tipo de Cálculo:</label>
+              <select
+                value={formData.calculationType}
+                onChange={(e) => setFormData({ ...formData, calculationType: e.target.value })}
+                required
+              >
+                <option value="">Seleccionar tipo</option>
+                {CALCULATION_TYPES.map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Valor:</label>
+              <input
+                type="number"
+                step="0.01"
+                value={formData.value}
+                onChange={(e) => setFormData({ ...formData, value: e.target.value })}
+                required
+              />
+            </div>
           </div>
-          <div className="form-group">
-            <label>Tipo de Cálculo:</label>
-            <select
-              value={formData.calculationType}
-              onChange={(e) => setFormData({ ...formData, calculationType: e.target.value })}
-              required
-            >
-              <option value="">Seleccionar tipo</option>
-              {CALCULATION_TYPES.map(type => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Valor:</label>
-            <input
-              type="number"
-              step="0.01"
-              value={formData.value}
-              onChange={(e) => setFormData({ ...formData, value: e.target.value })}
-              required
-            />
-          </div>
+
           <div className="form-group">
             <label>
               <input
@@ -194,40 +243,85 @@ function ProductFeeConfigs() {
               {' '}Activo
             </label>
           </div>
-          <div className="form-group">
-            <label>Montos Aplicables:</label>
-            <select
-              multiple
-              value={formData.applicableAmountIds}
-              onChange={(e) => {
-                const selected = Array.from(e.target.selectedOptions, option => option.value);
-                setFormData({ ...formData, applicableAmountIds: selected });
-              }}
-              style={{ minHeight: '100px' }}
-            >
-              {getProductAmounts().map(a => (
-                <option key={a.id} value={a.id}>${a.amount}</option>
-              ))}
-            </select>
-            <small>Mantén Ctrl/Cmd para seleccionar múltiples</small>
-          </div>
-          <div className="form-group">
-            <label>Plazos Aplicables:</label>
-            <select
-              multiple
-              value={formData.applicableTermIds}
-              onChange={(e) => {
-                const selected = Array.from(e.target.selectedOptions, option => option.value);
-                setFormData({ ...formData, applicableTermIds: selected });
-              }}
-              style={{ minHeight: '100px' }}
-            >
-              {getProductTerms().map(t => (
-                <option key={t.id} value={t.id}>{t.label}</option>
-              ))}
-            </select>
-            <small>Mantén Ctrl/Cmd para seleccionar múltiples</small>
-          </div>
+
+          {formData.productId && (
+            <>
+              <div className="selection-section">
+                <div className="section-header">
+                  <label>Montos Aplicables:</label>
+                  <div className="selection-actions">
+                    <button type="button" onClick={selectAllAmounts} className="btn-link">
+                      Seleccionar todos
+                    </button>
+                    <button type="button" onClick={clearAllAmounts} className="btn-link">
+                      Limpiar
+                    </button>
+                  </div>
+                </div>
+                {getProductAmounts().length === 0 ? (
+                  <div className="empty-message">No hay montos activos para este producto</div>
+                ) : (
+                  <>
+                    <div className="checkbox-grid">
+                      {getProductAmounts().map(amount => (
+                        <label key={amount.id} className="checkbox-card">
+                          <input
+                            type="checkbox"
+                            checked={formData.applicableAmountIds.includes(amount.id)}
+                            onChange={() => toggleAmount(amount.id)}
+                          />
+                          <span className="checkbox-label">${amount.amount.toFixed(2)}</span>
+                        </label>
+                      ))}
+                    </div>
+                    {formData.applicableAmountIds.length === 0 && (
+                      <div className="info-message">
+                        ℹ️ Si no seleccionas ningún monto, el fee aplicará para todos los montos
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+
+              <div className="selection-section">
+                <div className="section-header">
+                  <label>Plazos Aplicables:</label>
+                  <div className="selection-actions">
+                    <button type="button" onClick={selectAllTerms} className="btn-link">
+                      Seleccionar todos
+                    </button>
+                    <button type="button" onClick={clearAllTerms} className="btn-link">
+                      Limpiar
+                    </button>
+                  </div>
+                </div>
+                {getProductTerms().length === 0 ? (
+                  <div className="empty-message">No hay plazos activos para este producto</div>
+                ) : (
+                  <>
+                    <div className="checkbox-grid">
+                      {getProductTerms().map(term => (
+                        <label key={term.id} className="checkbox-card">
+                          <input
+                            type="checkbox"
+                            checked={formData.applicableTermIds.includes(term.id)}
+                            onChange={() => toggleTerm(term.id)}
+                          />
+                          <span className="checkbox-label">{term.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                    {formData.applicableTermIds.length === 0 && (
+                      <div className="info-message">
+                        ℹ️ Si no seleccionas ningún plazo, el fee aplicará para todos los plazos
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </>
+          )}
+
           <div className="form-actions">
             <button type="submit" className="btn-primary">
               {editingId ? 'Actualizar' : 'Crear'}
@@ -276,6 +370,8 @@ function ProductFeeConfigs() {
               <th>Fee</th>
               <th>Tipo Cálculo</th>
               <th>Valor</th>
+              <th>Montos Aplicables</th>
+              <th>Plazos Aplicables</th>
               <th>Estado</th>
               <th>Acciones</th>
             </tr>
@@ -287,6 +383,28 @@ function ProductFeeConfigs() {
                 <td>{config.feeDefinitionName}</td>
                 <td>{config.calculationType}</td>
                 <td>{config.value}</td>
+                <td>
+                  {!config.applicableAmounts || config.applicableAmounts.length === 0 ? (
+                    <span className="badge badge-info">Todos</span>
+                  ) : (
+                    <div className="tags-container">
+                      {config.applicableAmounts.map((a, idx) => (
+                        <span key={idx} className="tag">${a.value}</span>
+                      ))}
+                    </div>
+                  )}
+                </td>
+                <td>
+                  {!config.applicableTerms || config.applicableTerms.length === 0 ? (
+                    <span className="badge badge-info">Todos</span>
+                  ) : (
+                    <div className="tags-container">
+                      {config.applicableTerms.map((t, idx) => (
+                        <span key={idx} className="tag">{t.label}</span>
+                      ))}
+                    </div>
+                  )}
+                </td>
                 <td>
                   <span className={`badge ${config.isActive ? 'badge-success' : 'badge-danger'}`}>
                     {config.isActive ? 'Activo' : 'Inactivo'}
