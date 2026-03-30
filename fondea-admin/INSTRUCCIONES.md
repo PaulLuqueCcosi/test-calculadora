@@ -38,9 +38,17 @@ El menú lateral está organizado en 4 secciones para facilitar la navegación:
 
 ## Configuración del Backend
 
-Asegúrate de que el backend esté corriendo en `http://localhost:8080`
+1. Copia el archivo de variables de entorno:
+```bash
+cp .env.example .env
+```
 
-Si necesitas cambiar la URL del backend, edita `src/config/api.js`
+2. Edita `.env` y configura la URL del backend:
+```env
+VITE_API_BASE_URL=http://localhost:8080/api
+```
+
+3. Asegúrate de que el backend esté corriendo en la URL configurada
 
 ## Flujo de Trabajo Recomendado
 

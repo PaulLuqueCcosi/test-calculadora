@@ -9,12 +9,14 @@ Se ha creado un panel de administración completo y funcional en React para el s
 ```bash
 cd fondea-admin
 npm install
+cp .env.example .env
+# Edita .env si necesitas cambiar la URL del backend
 npm run dev
 ```
 
 Abre: `http://localhost:5173`
 
-**Requisito:** Backend corriendo en `http://localhost:8080`
+**Requisito:** Backend corriendo en `http://localhost:8080` (o la URL configurada en .env)
 
 ## 📊 Funcionalidades Implementadas
 

@@ -50,11 +50,22 @@ npm install
 
 ## Configuración
 
-La URL del backend se configura en `src/config/api.js`:
+1. Copia el archivo de ejemplo de variables de entorno:
 
-```javascript
-const API_BASE_URL = 'http://localhost:8080/api';
+```bash
+cp .env.example .env
 ```
+
+2. Edita el archivo `.env` y configura la URL de tu backend:
+
+```env
+VITE_API_BASE_URL=http://localhost:8080/api
+```
+
+Para otros entornos:
+- **Producción**: `https://api.fondea.com/api`
+- **Staging**: `https://staging-api.fondea.com/api`
+- **Desarrollo local**: `http://localhost:8080/api` (por defecto)
 
 ## Ejecución
 
