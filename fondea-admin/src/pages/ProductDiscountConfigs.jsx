@@ -37,26 +37,40 @@ function ProductDiscountConfigs() {
 
   const loadData = async () => {
     try {
-      const [configsRes, productsRes, discountsRes, amountsRes, termsRes, installmentsRes, scoresRes] = await Promise.all([
+      const [configsRes, productsRes, discountsRes, scoresRes] = await Promise.all([
         productDiscountConfigService.getAll(),
         productService.getAll(),
         discountDefinitionService.getAll(),
-        productAmountService.getAll(),
-        productTermService.getAll(),
-        productInstallmentOptionService.getAll(),
         creditScoreRangeService.getAll()
       ]);
       setConfigs(configsRes.data);
       setProducts(productsRes.data);
       setDiscounts(discountsRes.data);
-      setAmounts(amountsRes.data);
-      setTerms(termsRes.data);
-      setInstallments(installmentsRes.data);
       setScoreRanges(scoresRes.data);
     } catch (error) {
       alert('Error al cargar datos');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Load product-specific data when productId changes in form
+  const loadProductData = async (productId) => {
+    if (!productId) {
+      setAmounts([]); setTerms([]); setInstallments([]);
+      return;
+    }
+    try {
+      const [amountsRes, termsRes, installmentsRes] = await Promise.all([
+        productAmountService.getByProduct(productId),
+        productTermService.getByProduct(productId),
+        productInstallmentOptionService.getByProduct(productId),
+      ]);
+      setAmounts(amountsRes.data);
+      setTerms(termsRes.data);
+      setInstallments(installmentsRes.data);
+    } catch {
+      alert('Error al cargar datos del producto');
     }
   };
 
@@ -67,10 +81,10 @@ function ProductDiscountConfigs() {
         return alert('Debes seleccionar al menos un monto aplicable.');
       if (getProductTerms().length > 0 && formData.applicableTermIds.length === 0)
         return alert('Debes seleccionar al menos un plazo aplicable.');
-      if (getProductInstallments().length > 0 && formData.applicableInstallmentIds.length === 0)
-        return alert('Debes seleccionar al menos una cuota aplicable.');
       if (getProductScoreRanges().length > 0 && formData.applicableCreditScoreRangeIds.length === 0)
         return alert('Debes seleccionar al menos un rango de score aplicable.');
+      if (getAvailableInstallments().length > 0 && formData.applicableInstallmentIds.length === 0)
+        return alert('Debes seleccionar al menos una cuota aplicable.');
     }
     try {
       const payload = {
@@ -91,6 +105,8 @@ function ProductDiscountConfigs() {
 
   const handleEdit = (config) => {
     setEditingId(config.id);
+    loadProductData(config.productId);
+    creditScoreRangeService.getByProduct(config.productId).then(r => setScoreRanges(r.data)).catch(() => {});
     setFormData({ 
       productId: config.productId,
       discountDefinitionCode: config.discountDefinitionCode,
@@ -163,7 +179,8 @@ function ProductDiscountConfigs() {
       ...prev,
       applicableAmountIds: prev.applicableAmountIds.includes(amountId)
         ? prev.applicableAmountIds.filter(id => id !== amountId)
-        : [...prev.applicableAmountIds, amountId]
+        : [...prev.applicableAmountIds, amountId],
+      applicableInstallmentIds: []
     }));
   };
 
@@ -172,30 +189,50 @@ function ProductDiscountConfigs() {
       ...prev,
       applicableTermIds: prev.applicableTermIds.includes(termId)
         ? prev.applicableTermIds.filter(id => id !== termId)
-        : [...prev.applicableTermIds, termId]
+        : [...prev.applicableTermIds, termId],
+      applicableInstallmentIds: []
     }));
   };
 
   const selectAllAmounts = () => {
-    const allAmountIds = getProductAmounts().map(a => a.id);
-    setFormData(prev => ({ ...prev, applicableAmountIds: allAmountIds }));
+    setFormData(prev => ({ ...prev, applicableAmountIds: getProductAmounts().map(a => a.id), applicableInstallmentIds: [] }));
   };
 
   const clearAllAmounts = () => {
-    setFormData(prev => ({ ...prev, applicableAmountIds: [] }));
+    setFormData(prev => ({ ...prev, applicableAmountIds: [], applicableInstallmentIds: [] }));
   };
 
   const selectAllTerms = () => {
-    const allTermIds = getProductTerms().map(t => t.id);
-    setFormData(prev => ({ ...prev, applicableTermIds: allTermIds }));
+    setFormData(prev => ({ ...prev, applicableTermIds: getProductTerms().map(t => t.id), applicableInstallmentIds: [] }));
   };
 
   const clearAllTerms = () => {
-    setFormData(prev => ({ ...prev, applicableTermIds: [] }));
+    setFormData(prev => ({ ...prev, applicableTermIds: [], applicableInstallmentIds: [] }));
   };
 
   const getProductInstallments = () => {
     return installments.filter(i => i.productId === formData.productId && i.isActive);
+  };
+
+  // Cuotas disponibles según la combinación de montos, plazos y scores ya seleccionados
+  const getAvailableInstallments = () => {
+    const all = getProductInstallments();
+    const { applicableAmountIds, applicableTermIds, applicableCreditScoreRangeIds } = formData;
+    if (!applicableAmountIds.length || !applicableTermIds.length || !applicableCreditScoreRangeIds.length) return [];
+
+    const selectedAmountValues = amounts.filter(a => applicableAmountIds.includes(a.id)).map(a => a.amount);
+    const selectedTermValues = terms.filter(t => applicableTermIds.includes(t.id)).map(t => t.termDays);
+    const selectedScoreIds = new Set(applicableCreditScoreRangeIds);
+
+    return all.filter(inst => {
+      const amountOk = !inst.restrictedToAmounts?.length ||
+        inst.restrictedToAmounts.some(v => selectedAmountValues.includes(v));
+      const termOk = !inst.restrictedToTerms?.length ||
+        inst.restrictedToTerms.some(v => selectedTermValues.includes(v));
+      const scoreOk = !inst.restrictedToCreditScoreRanges?.length ||
+        inst.restrictedToCreditScoreRanges.some(r => selectedScoreIds.has(r.id));
+      return amountOk && termOk && scoreOk;
+    });
   };
 
   const toggleInstallment = (instId) => {
@@ -208,7 +245,7 @@ function ProductDiscountConfigs() {
   };
 
   const selectAllInstallments = () => {
-    setFormData(prev => ({ ...prev, applicableInstallmentIds: getProductInstallments().map(i => i.id) }));
+    setFormData(prev => ({ ...prev, applicableInstallmentIds: getAvailableInstallments().map(i => i.id) }));
   };
 
   const clearAllInstallments = () => {
@@ -224,16 +261,17 @@ function ProductDiscountConfigs() {
       ...prev,
       applicableCreditScoreRangeIds: prev.applicableCreditScoreRangeIds.includes(rangeId)
         ? prev.applicableCreditScoreRangeIds.filter(id => id !== rangeId)
-        : [...prev.applicableCreditScoreRangeIds, rangeId]
+        : [...prev.applicableCreditScoreRangeIds, rangeId],
+      applicableInstallmentIds: []
     }));
   };
 
   const selectAllScoreRanges = () => {
-    setFormData(prev => ({ ...prev, applicableCreditScoreRangeIds: getProductScoreRanges().map(r => r.id) }));
+    setFormData(prev => ({ ...prev, applicableCreditScoreRangeIds: getProductScoreRanges().map(r => r.id), applicableInstallmentIds: [] }));
   };
 
   const clearAllScoreRanges = () => {
-    setFormData(prev => ({ ...prev, applicableCreditScoreRangeIds: [] }));
+    setFormData(prev => ({ ...prev, applicableCreditScoreRangeIds: [], applicableInstallmentIds: [] }));
   };
 
   if (loading) return <div>Cargando...</div>;
@@ -254,7 +292,12 @@ function ProductDiscountConfigs() {
               <label>Producto:</label>
               <select
                 value={formData.productId}
-                onChange={(e) => setFormData({ ...formData, productId: e.target.value, applicableAmountIds: [], applicableTermIds: [], applicableInstallmentIds: [], applicableCreditScoreRangeIds: [] })}
+                onChange={(e) => {
+                  const pid = e.target.value;
+                  setFormData({ ...formData, productId: pid, applicableAmountIds: [], applicableTermIds: [], applicableInstallmentIds: [], applicableCreditScoreRangeIds: [] });
+                  loadProductData(pid);
+                  if (pid) creditScoreRangeService.getByProduct(pid).then(r => setScoreRanges(r.data)).catch(() => {});
+                }}
                 required
               >
                 <option value="">Seleccionar producto</option>
@@ -415,12 +458,16 @@ function ProductDiscountConfigs() {
                     </button>
                   </div>
                 </div>
-                {getProductInstallments().length === 0 ? (
-                  <div className="empty-message">No hay cuotas activas para este producto</div>
+                {!formData.applicableAmountIds.length || !formData.applicableTermIds.length || !formData.applicableCreditScoreRangeIds.length ? (
+                  <div className="info-message">
+                    ℹ️ Primero selecciona montos, plazos y rangos de score para ver las cuotas disponibles
+                  </div>
+                ) : getAvailableInstallments().length === 0 ? (
+                  <div className="empty-message">No hay cuotas compatibles con la combinación seleccionada</div>
                 ) : (
                   <>
                     <div className="checkbox-grid">
-                      {getProductInstallments().map(inst => (
+                      {getAvailableInstallments().map(inst => (
                         <label key={inst.id} className="checkbox-card">
                           <input
                             type="checkbox"

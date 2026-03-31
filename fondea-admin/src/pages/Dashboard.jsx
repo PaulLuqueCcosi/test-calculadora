@@ -1,30 +1,89 @@
 import { Link } from 'react-router-dom';
 import './Dashboard.css';
 
-function Dashboard() {
-  const sections = [
-    { title: 'Productos', path: '/products', icon: '📦', description: 'Gestionar productos de préstamo' },
-    { title: 'Montos', path: '/product-amounts', icon: '💰', description: 'Configurar montos disponibles' },
-    { title: 'Plazos', path: '/product-terms', icon: '📅', description: 'Definir plazos de pago' },
-    { title: 'Definiciones Fee', path: '/fee-definitions', icon: '💳', description: 'Crear tipos de comisiones' },
-    { title: 'Config Fee', path: '/product-fee-configs', icon: '⚙️', description: 'Configurar fees por producto' },
-    { title: 'Definiciones Descuento', path: '/discount-definitions', icon: '🎁', description: 'Crear tipos de descuentos' },
-    { title: 'Config Descuento', path: '/product-discount-configs', icon: '🔧', description: 'Configurar descuentos por producto' },
-    { title: 'Simulador', path: '/simulator', icon: '🧮', description: 'Simular préstamos' },
-  ];
+const PHASES = [
+  {
+    phase: 1,
+    title: 'Catálogo Global',
+    description: 'Crea las definiciones de fees y descuentos. Se hace una sola vez y se reutilizan en todos los productos.',
+    color: '#8e24aa',
+    links: [
+      { to: '/fee-definitions', label: 'Definiciones de Fees', icon: '💳' },
+      { to: '/discount-definitions', label: 'Definiciones de Descuentos', icon: '🎁' },
+    ]
+  },
+  {
+    phase: 2,
+    title: 'Crear Producto',
+    description: 'Define el producto base. Todo lo demás depende de él.',
+    color: '#1e88e5',
+    links: [
+      { to: '/products', label: 'Productos', icon: '📦' },
+    ]
+  },
+  {
+    phase: 3,
+    title: 'Dimensiones del Producto',
+    description: 'Configura los montos, plazos y rangos de score. Luego crea las opciones de cuotas que combinan estas tres dimensiones.',
+    color: '#2e7d32',
+    links: [
+      { to: '/product-amounts', label: 'Montos', icon: '💰' },
+      { to: '/product-terms', label: 'Plazos', icon: '📅' },
+      { to: '/credit-score-ranges', label: 'Score Crediticio', icon: '📊' },
+      { to: '/product-installment-options', label: 'Opciones de Cuotas', icon: '🔢' },
+    ]
+  },
+  {
+    phase: 4,
+    title: 'Fees y Descuentos por Producto',
+    description: 'Asocia fees y descuentos al producto, especificando a qué montos, plazos, cuotas y scores aplica cada uno.',
+    color: '#e65100',
+    links: [
+      { to: '/product-fee-configs', label: 'Config. de Fees', icon: '⚙️' },
+      { to: '/product-discount-configs', label: 'Config. de Descuentos', icon: '🔧' },
+    ]
+  },
+  {
+    phase: 5,
+    title: 'Simular',
+    description: 'Con todo configurado, usa el simulador para probar combinaciones de monto, plazo, cuotas y score crediticio.',
+    color: '#00838f',
+    links: [
+      { to: '/simulator', label: 'Simulador de Préstamos', icon: '🧮' },
+    ]
+  },
+];
 
+function Dashboard() {
   return (
     <div className="dashboard">
-      <h1>Panel de Administración Fondea</h1>
-      <p className="dashboard-subtitle">Gestiona productos, comisiones, descuentos y simula préstamos</p>
-      
-      <div className="dashboard-grid">
-        {sections.map((section) => (
-          <Link key={section.path} to={section.path} className="dashboard-card">
-            <div className="card-icon">{section.icon}</div>
-            <h3>{section.title}</h3>
-            <p>{section.description}</p>
-          </Link>
+      <div className="dashboard-header">
+        <h1>Panel de Administración Fondea</h1>
+        <p className="dashboard-subtitle">Sigue los pasos para configurar un producto desde cero</p>
+      </div>
+
+      <div className="phases-list">
+        {PHASES.map((p, idx) => (
+          <div key={p.phase} className="phase-card" style={{ '--phase-color': p.color }}>
+            <div className="phase-card__header">
+              <div className="phase-number" style={{ background: p.color }}>
+                {p.phase}
+              </div>
+              <div className="phase-card__info">
+                <h3>{p.title}</h3>
+                <p>{p.description}</p>
+              </div>
+            </div>
+            <div className="phase-card__links">
+              {p.links.map(link => (
+                <Link key={link.to} to={link.to} className="phase-link">
+                  <span>{link.icon}</span>
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+            {idx < PHASES.length - 1 && <div className="phase-arrow">↓</div>}
+          </div>
         ))}
       </div>
     </div>

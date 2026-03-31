@@ -4,64 +4,125 @@
 }
 
 .sidebar {
-  width: 280px;
-  background: #2c3e50;
+  width: 260px;
+  background: #1a2535;
   color: white;
-  padding: 20px;
+  padding: 0 0 20px 0;
   overflow-y: auto;
+  flex-shrink: 0;
 }
 
-.sidebar h2 {
-  margin-bottom: 30px;
-  font-size: 24px;
-  text-align: center;
-  padding-bottom: 20px;
-  border-bottom: 2px solid #34495e;
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 20px;
+  border-bottom: 1px solid #2c3e50;
+  margin-bottom: 8px;
+}
+
+.brand-icon {
+  font-size: 22px;
+}
+
+.brand-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: #ecf0f1;
+  letter-spacing: 0.3px;
 }
 
 .menu-section {
-  margin-bottom: 25px;
+  margin-bottom: 4px;
+  padding: 0 12px;
 }
 
 .section-title {
-  color: #95a5a6;
-  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #7f8c8d;
+  font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
-  margin-bottom: 10px;
-  padding-left: 10px;
+  margin-bottom: 4px;
+  padding: 6px 4px 2px 4px;
+}
+
+.section-title--phase {
+  color: #95a5a6;
+  font-size: 11px;
+  padding: 8px 4px 2px 4px;
+  border-top: 1px solid #2c3e50;
+  margin-top: 4px;
+  user-select: none;
+}
+
+.phase-badge {
+  background: #2c3e50;
+  color: #3498db;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  border: 1px solid #3498db44;
+  flex-shrink: 0;
+}
+
+.section-label {
+  flex: 1;
+}
+
+.section-toggle {
+  font-size: 12px;
+  color: #7f8c8d;
+}
+
+.section-hint {
+  font-size: 10px;
+  color: #5d6d7e;
+  padding: 0 4px 4px 4px;
+  font-style: italic;
 }
 
 .sidebar ul {
   list-style: none;
   padding: 0;
-  margin: 0;
+  margin: 0 0 4px 0;
 }
 
 .sidebar li {
-  margin-bottom: 5px;
+  margin-bottom: 2px;
 }
 
 .sidebar a {
-  color: #ecf0f1;
+  color: #bdc3c7;
   text-decoration: none;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+  gap: 8px;
+  padding: 8px 10px;
   border-radius: 6px;
-  transition: all 0.2s;
+  transition: all 0.15s;
+  font-size: 13px;
+}
+
+.nav-icon {
   font-size: 14px;
+  width: 18px;
+  text-align: center;
+  flex-shrink: 0;
 }
 
 .sidebar a:hover {
-  background: #34495e;
-  padding-left: 16px;
+  background: #2c3e50;
+  color: #ecf0f1;
 }
 
 .sidebar a.active {
-  background: #3498db;
+  background: #2980b9;
+  color: white;
   font-weight: 600;
 }
 
@@ -72,20 +133,6 @@
   background: #ecf0f1;
 }
 
-/* Scrollbar personalizado para el sidebar */
-.sidebar::-webkit-scrollbar {
-  width: 6px;
-}
-
-.sidebar::-webkit-scrollbar-track {
-  background: #34495e;
-}
-
-.sidebar::-webkit-scrollbar-thumb {
-  background: #7f8c8d;
-  border-radius: 3px;
-}
-
-.sidebar::-webkit-scrollbar-thumb:hover {
-  background: #95a5a6;
-}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-track { background: #1a2535; }
+.sidebar::-webkit-scrollbar-thumb { background: #2c3e50; border-radius: 2px; }
