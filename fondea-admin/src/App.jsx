@@ -5,6 +5,7 @@ import Products from './pages/Products';
 import ProductAmounts from './pages/ProductAmounts';
 import ProductTerms from './pages/ProductTerms';
 import ProductInstallmentOptions from './pages/ProductInstallmentOptions';
+import CreditScoreRanges from './pages/CreditScoreRanges';
 import FeeDefinitions from './pages/FeeDefinitions';
 import ProductFeeConfigs from './pages/ProductFeeConfigs';
 import DiscountDefinitions from './pages/DiscountDefinitions';
@@ -22,6 +23,7 @@ function App() {
           <Route path="product-amounts" element={<ProductAmounts />} />
           <Route path="product-terms" element={<ProductTerms />} />
           <Route path="product-installment-options" element={<ProductInstallmentOptions />} />
+          <Route path="credit-score-ranges" element={<CreditScoreRanges />} />
           <Route path="fee-definitions" element={<FeeDefinitions />} />
           <Route path="product-fee-configs" element={<ProductFeeConfigs />} />
           <Route path="discount-definitions" element={<DiscountDefinitions />} />

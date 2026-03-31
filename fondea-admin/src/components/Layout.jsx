@@ -46,6 +46,11 @@ function Layout() {
                 🔢 Cuotas
               </NavLink>
             </li>
+            <li>
+              <NavLink to="/credit-score-ranges" className={({ isActive }) => isActive ? 'active' : ''}>
+                📊 Score Crediticio
+              </NavLink>
+            </li>
           </ul>
         </div>
 

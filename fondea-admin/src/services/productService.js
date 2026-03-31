@@ -32,3 +32,11 @@ export const productInstallmentOptionService = {
   update: (id, data) => api.put(`/v1/product-installment-options/${id}`, data),
   delete: (id) => api.delete(`/v1/product-installment-options/${id}`),
 };
+
+export const creditScoreRangeService = {
+  getAll: () => api.get('/v1/credit-score-ranges'),
+  getById: (id) => api.get(`/v1/credit-score-ranges/${id}`),
+  create: (data) => api.post('/v1/credit-score-ranges', data),
+  update: (id, data) => api.put(`/v1/credit-score-ranges/${id}`, data),
+  delete: (id) => api.delete(`/v1/credit-score-ranges/${id}`),
+};

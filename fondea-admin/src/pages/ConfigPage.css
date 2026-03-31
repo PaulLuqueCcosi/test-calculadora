@@ -107,6 +107,16 @@
   margin-top: 10px;
 }
 
+.error-message {
+  background: #fdecea;
+  color: #c62828;
+  padding: 12px 15px;
+  border-radius: 6px;
+  font-size: 13px;
+  border-left: 4px solid #e53935;
+  margin-top: 10px;
+}
+
 .empty-message {
   background: #fff3cd;
   color: #856404;
@@ -137,6 +147,15 @@
 .badge-info {
   background: #d1ecf1;
   color: #0c5460;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-warning {
+  background: #fff3cd;
+  color: #856404;
   padding: 4px 10px;
   border-radius: 12px;
   font-size: 12px;

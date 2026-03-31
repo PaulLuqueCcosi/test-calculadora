@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { productFeeConfigService } from '../services/feeService';
 import { feeDefinitionService } from '../services/feeService';
-import { productService, productAmountService, productTermService, productInstallmentOptionService } from '../services/productService';
+import { productService, productAmountService, productTermService, productInstallmentOptionService, creditScoreRangeService } from '../services/productService';
 import './CrudPage.css';
 import './ConfigPage.css';
 
@@ -14,6 +14,7 @@ function ProductFeeConfigs() {
   const [amounts, setAmounts] = useState([]);
   const [terms, setTerms] = useState([]);
   const [installments, setInstallments] = useState([]);
+  const [scoreRanges, setScoreRanges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -25,7 +26,8 @@ function ProductFeeConfigs() {
     isActive: true,
     applicableAmountIds: [],
     applicableTermIds: [],
-    applicableInstallmentIds: []
+    applicableInstallmentIds: [],
+    applicableCreditScoreRangeIds: []
   });
   const [filter, setFilter] = useState({ productId: '', feeCode: '' });
 
@@ -35,13 +37,14 @@ function ProductFeeConfigs() {
 
   const loadData = async () => {
     try {
-      const [configsRes, productsRes, feesRes, amountsRes, termsRes, installmentsRes] = await Promise.all([
+      const [configsRes, productsRes, feesRes, amountsRes, termsRes, installmentsRes, scoresRes] = await Promise.all([
         productFeeConfigService.getAll(),
         productService.getAll(),
         feeDefinitionService.getAll(),
         productAmountService.getAll(),
         productTermService.getAll(),
-        productInstallmentOptionService.getAll()
+        productInstallmentOptionService.getAll(),
+        creditScoreRangeService.getAll()
       ]);
       setConfigs(configsRes.data);
       setProducts(productsRes.data);
@@ -49,6 +52,7 @@ function ProductFeeConfigs() {
       setAmounts(amountsRes.data);
       setTerms(termsRes.data);
       setInstallments(installmentsRes.data);
+      setScoreRanges(scoresRes.data);
     } catch (error) {
       alert('Error al cargar datos');
     } finally {
@@ -58,6 +62,16 @@ function ProductFeeConfigs() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (formData.productId) {
+      if (getProductAmounts().length > 0 && formData.applicableAmountIds.length === 0)
+        return alert('Debes seleccionar al menos un monto aplicable.');
+      if (getProductTerms().length > 0 && formData.applicableTermIds.length === 0)
+        return alert('Debes seleccionar al menos un plazo aplicable.');
+      if (getProductInstallments().length > 0 && formData.applicableInstallmentIds.length === 0)
+        return alert('Debes seleccionar al menos una cuota aplicable.');
+      if (getProductScoreRanges().length > 0 && formData.applicableCreditScoreRangeIds.length === 0)
+        return alert('Debes seleccionar al menos un rango de score aplicable.');
+    }
     try {
       const payload = {
         ...formData,
@@ -94,7 +108,10 @@ function ProductFeeConfigs() {
       applicableInstallmentIds: config.applicableInstallments?.map(i => {
         const inst = installments.find(im => im.installmentCount === i.value && im.productId === config.productId);
         return inst?.id;
-      }).filter(Boolean) || []
+      }).filter(Boolean) || [],
+      applicableCreditScoreRangeIds: scoreRanges
+        .filter(r => r.productId === config.productId && config.applicableInstallments?.some(i => i.availableForCreditScores?.some(s => s.id === r.id)))
+        .map(r => r.id)
     });
     setShowForm(true);
   };
@@ -119,7 +136,8 @@ function ProductFeeConfigs() {
       isActive: true,
       applicableAmountIds: [],
       applicableTermIds: [],
-      applicableInstallmentIds: []
+      applicableInstallmentIds: [],
+      applicableCreditScoreRangeIds: []
     });
     setEditingId(null);
     setShowForm(false);
@@ -195,6 +213,27 @@ function ProductFeeConfigs() {
     setFormData(prev => ({ ...prev, applicableInstallmentIds: [] }));
   };
 
+  const getProductScoreRanges = () => {
+    return scoreRanges.filter(r => r.productId === formData.productId && r.isActive);
+  };
+
+  const toggleScoreRange = (rangeId) => {
+    setFormData(prev => ({
+      ...prev,
+      applicableCreditScoreRangeIds: prev.applicableCreditScoreRangeIds.includes(rangeId)
+        ? prev.applicableCreditScoreRangeIds.filter(id => id !== rangeId)
+        : [...prev.applicableCreditScoreRangeIds, rangeId]
+    }));
+  };
+
+  const selectAllScoreRanges = () => {
+    setFormData(prev => ({ ...prev, applicableCreditScoreRangeIds: getProductScoreRanges().map(r => r.id) }));
+  };
+
+  const clearAllScoreRanges = () => {
+    setFormData(prev => ({ ...prev, applicableCreditScoreRangeIds: [] }));
+  };
+
   if (loading) return <div>Cargando...</div>;
 
   return (
@@ -213,7 +252,7 @@ function ProductFeeConfigs() {
               <label>Producto:</label>
               <select
                 value={formData.productId}
-                onChange={(e) => setFormData({ ...formData, productId: e.target.value, applicableAmountIds: [], applicableTermIds: [], applicableInstallmentIds: [] })}
+                onChange={(e) => setFormData({ ...formData, productId: e.target.value, applicableAmountIds: [], applicableTermIds: [], applicableInstallmentIds: [], applicableCreditScoreRangeIds: [] })}
                 required
               >
                 <option value="">Seleccionar producto</option>
@@ -305,8 +344,8 @@ function ProductFeeConfigs() {
                       ))}
                     </div>
                     {formData.applicableAmountIds.length === 0 && (
-                      <div className="info-message">
-                        ℹ️ Si no seleccionas ningún monto, el fee aplicará para todos los montos
+                      <div className="error-message">
+                        ⚠️ Debes seleccionar al menos un monto
                       </div>
                     )}
                   </>
@@ -342,8 +381,8 @@ function ProductFeeConfigs() {
                       ))}
                     </div>
                     {formData.applicableTermIds.length === 0 && (
-                      <div className="info-message">
-                        ℹ️ Si no seleccionas ningún plazo, el fee aplicará para todos los plazos
+                      <div className="error-message">
+                        ⚠️ Debes seleccionar al menos un plazo
                       </div>
                     )}
                   </>
@@ -379,9 +418,40 @@ function ProductFeeConfigs() {
                       ))}
                     </div>
                     {formData.applicableInstallmentIds.length === 0 && (
-                      <div className="info-message">
-                        ℹ️ Si no seleccionas ninguna cuota, el fee aplicará para todas las cuotas
+                      <div className="error-message">
+                        ⚠️ Debes seleccionar al menos una cuota
                       </div>
+                    )}
+                  </>
+                )}
+              </div>
+
+              <div className="selection-section">
+                <div className="section-header">
+                  <label>Rangos de Score Crediticio Aplicables:</label>
+                  <div className="selection-actions">
+                    <button type="button" onClick={selectAllScoreRanges} className="btn-link">Seleccionar todos</button>
+                    <button type="button" onClick={clearAllScoreRanges} className="btn-link">Limpiar</button>
+                  </div>
+                </div>
+                {getProductScoreRanges().length === 0 ? (
+                  <div className="empty-message">No hay rangos de score activos para este producto</div>
+                ) : (
+                  <>
+                    <div className="checkbox-grid">
+                      {getProductScoreRanges().map(range => (
+                        <label key={range.id} className="checkbox-card">
+                          <input
+                            type="checkbox"
+                            checked={formData.applicableCreditScoreRangeIds.includes(range.id)}
+                            onChange={() => toggleScoreRange(range.id)}
+                          />
+                          <span className="checkbox-label">{range.label} ({range.minScore}-{range.maxScore})</span>
+                        </label>
+                      ))}
+                    </div>
+                    {formData.applicableCreditScoreRangeIds.length === 0 && (
+                      <div className="error-message">⚠️ Debes seleccionar al menos un rango de score</div>
                     )}
                   </>
                 )}
@@ -440,6 +510,7 @@ function ProductFeeConfigs() {
               <th>Montos Aplicables</th>
               <th>Plazos Aplicables</th>
               <th>Cuotas Aplicables</th>
+              <th>Score Ranges</th>
               <th>Estado</th>
               <th>Acciones</th>
             </tr>
@@ -453,7 +524,7 @@ function ProductFeeConfigs() {
                 <td>{config.value}</td>
                 <td>
                   {!config.applicableAmounts || config.applicableAmounts.length === 0 ? (
-                    <span className="badge badge-info">Todos</span>
+                    <span className="badge badge-warning">Sin configurar</span>
                   ) : (
                     <div className="tags-container">
                       {config.applicableAmounts.map((a, idx) => (
@@ -464,7 +535,7 @@ function ProductFeeConfigs() {
                 </td>
                 <td>
                   {!config.applicableTerms || config.applicableTerms.length === 0 ? (
-                    <span className="badge badge-info">Todos</span>
+                    <span className="badge badge-warning">Sin configurar</span>
                   ) : (
                     <div className="tags-container">
                       {config.applicableTerms.map((t, idx) => (
@@ -475,11 +546,22 @@ function ProductFeeConfigs() {
                 </td>
                 <td>
                   {!config.applicableInstallments || config.applicableInstallments.length === 0 ? (
-                    <span className="badge badge-info">Todas</span>
+                    <span className="badge badge-warning">Sin configurar</span>
                   ) : (
                     <div className="tags-container">
                       {config.applicableInstallments.map((i, idx) => (
                         <span key={idx} className="tag">{i.label}</span>
+                      ))}
+                    </div>
+                  )}
+                </td>
+                <td>
+                  {!config.applicableCreditScoreRanges || config.applicableCreditScoreRanges?.length === 0 ? (
+                    <span className="badge badge-warning">Sin configurar</span>
+                  ) : (
+                    <div className="tags-container">
+                      {config.applicableCreditScoreRanges.map((r, idx) => (
+                        <span key={idx} className="tag">{r.label}</span>
                       ))}
                     </div>
                   )}
