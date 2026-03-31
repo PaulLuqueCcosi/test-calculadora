@@ -24,3 +24,11 @@ export const productTermService = {
   update: (id, data) => api.put(`/v1/product-terms/${id}`, data),
   delete: (id) => api.delete(`/v1/product-terms/${id}`),
 };
+
+export const productInstallmentOptionService = {
+  getAll: () => api.get('/v1/product-installment-options'),
+  getById: (id) => api.get(`/v1/product-installment-options/${id}`),
+  create: (data) => api.post('/v1/product-installment-options', data),
+  update: (id, data) => api.put(`/v1/product-installment-options/${id}`, data),
+  delete: (id) => api.delete(`/v1/product-installment-options/${id}`),
+};

@@ -10,6 +10,7 @@ function Simulator() {
     productId: '',
     amount: '',
     termDays: '',
+    installmentCount: '',
     isFirstLoan: false
   });
   const [simulation, setSimulation] = useState(null);
@@ -29,7 +30,7 @@ function Simulator() {
   };
 
   const handleProductChange = async (productId) => {
-    setFormData({ ...formData, productId, amount: '', termDays: '' });
+    setFormData({ ...formData, productId, amount: '', termDays: '', installmentCount: '' });
     setSimulation(null);
     
     if (productId) {
@@ -54,6 +55,7 @@ function Simulator() {
         productId: formData.productId,
         amount: parseFloat(formData.amount),
         termDays: parseInt(formData.termDays),
+        installmentCount: parseInt(formData.installmentCount),
         isFirstLoan: formData.isFirstLoan
       };
       const response = await simulatorService.simulate(payload);
@@ -114,6 +116,20 @@ function Simulator() {
                   ))}
                 </select>
               </div>
+
+              <div className="form-group">
+                <label>Cuotas:</label>
+                <select
+                  value={formData.installmentCount}
+                  onChange={(e) => setFormData({ ...formData, installmentCount: e.target.value })}
+                  required
+                >
+                  <option value="">Seleccionar cuotas</option>
+                  {productOptions.installments.map((i, idx) => (
+                    <option key={idx} value={i.value}>{i.label}</option>
+                  ))}
+                </select>
+              </div>
             </>
           )}
 
@@ -150,6 +166,10 @@ function Simulator() {
               <div className="result-row">
                 <span>Plazo:</span>
                 <strong>{simulation.termDays} días</strong>
+              </div>
+              <div className="result-row">
+                <span>Cuotas:</span>
+                <strong>{simulation.installmentCount}</strong>
               </div>
               <div className="result-row">
                 <span>Primer Préstamo:</span>

@@ -41,6 +41,11 @@ function Layout() {
                 📅 Plazos
               </NavLink>
             </li>
+            <li>
+              <NavLink to="/product-installment-options" className={({ isActive }) => isActive ? 'active' : ''}>
+                🔢 Cuotas
+              </NavLink>
+            </li>
           </ul>
         </div>
 

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { productFeeConfigService } from '../services/feeService';
 import { feeDefinitionService } from '../services/feeService';
-import { productService, productAmountService, productTermService } from '../services/productService';
+import { productService, productAmountService, productTermService, productInstallmentOptionService } from '../services/productService';
 import './CrudPage.css';
 import './ConfigPage.css';
 
@@ -13,6 +13,7 @@ function ProductFeeConfigs() {
   const [fees, setFees] = useState([]);
   const [amounts, setAmounts] = useState([]);
   const [terms, setTerms] = useState([]);
+  const [installments, setInstallments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -23,7 +24,8 @@ function ProductFeeConfigs() {
     value: '',
     isActive: true,
     applicableAmountIds: [],
-    applicableTermIds: []
+    applicableTermIds: [],
+    applicableInstallmentIds: []
   });
   const [filter, setFilter] = useState({ productId: '', feeCode: '' });
 
@@ -33,18 +35,20 @@ function ProductFeeConfigs() {
 
   const loadData = async () => {
     try {
-      const [configsRes, productsRes, feesRes, amountsRes, termsRes] = await Promise.all([
+      const [configsRes, productsRes, feesRes, amountsRes, termsRes, installmentsRes] = await Promise.all([
         productFeeConfigService.getAll(),
         productService.getAll(),
         feeDefinitionService.getAll(),
         productAmountService.getAll(),
-        productTermService.getAll()
+        productTermService.getAll(),
+        productInstallmentOptionService.getAll()
       ]);
       setConfigs(configsRes.data);
       setProducts(productsRes.data);
       setFees(feesRes.data);
       setAmounts(amountsRes.data);
       setTerms(termsRes.data);
+      setInstallments(installmentsRes.data);
     } catch (error) {
       alert('Error al cargar datos');
     } finally {
@@ -86,6 +90,10 @@ function ProductFeeConfigs() {
       applicableTermIds: config.applicableTerms?.map(t => {
         const term = terms.find(tm => tm.termDays === t.value && tm.productId === config.productId);
         return term?.id;
+      }).filter(Boolean) || [],
+      applicableInstallmentIds: config.applicableInstallments?.map(i => {
+        const inst = installments.find(im => im.installmentCount === i.value && im.productId === config.productId);
+        return inst?.id;
       }).filter(Boolean) || []
     });
     setShowForm(true);
@@ -110,7 +118,8 @@ function ProductFeeConfigs() {
       value: '',
       isActive: true,
       applicableAmountIds: [],
-      applicableTermIds: []
+      applicableTermIds: [],
+      applicableInstallmentIds: []
     });
     setEditingId(null);
     setShowForm(false);
@@ -165,6 +174,27 @@ function ProductFeeConfigs() {
     setFormData(prev => ({ ...prev, applicableTermIds: [] }));
   };
 
+  const getProductInstallments = () => {
+    return installments.filter(i => i.productId === formData.productId && i.isActive);
+  };
+
+  const toggleInstallment = (instId) => {
+    setFormData(prev => ({
+      ...prev,
+      applicableInstallmentIds: prev.applicableInstallmentIds.includes(instId)
+        ? prev.applicableInstallmentIds.filter(id => id !== instId)
+        : [...prev.applicableInstallmentIds, instId]
+    }));
+  };
+
+  const selectAllInstallments = () => {
+    setFormData(prev => ({ ...prev, applicableInstallmentIds: getProductInstallments().map(i => i.id) }));
+  };
+
+  const clearAllInstallments = () => {
+    setFormData(prev => ({ ...prev, applicableInstallmentIds: [] }));
+  };
+
   if (loading) return <div>Cargando...</div>;
 
   return (
@@ -183,7 +213,7 @@ function ProductFeeConfigs() {
               <label>Producto:</label>
               <select
                 value={formData.productId}
-                onChange={(e) => setFormData({ ...formData, productId: e.target.value, applicableAmountIds: [], applicableTermIds: [] })}
+                onChange={(e) => setFormData({ ...formData, productId: e.target.value, applicableAmountIds: [], applicableTermIds: [], applicableInstallmentIds: [] })}
                 required
               >
                 <option value="">Seleccionar producto</option>
@@ -319,6 +349,43 @@ function ProductFeeConfigs() {
                   </>
                 )}
               </div>
+
+              <div className="selection-section">
+                <div className="section-header">
+                  <label>Cuotas Aplicables:</label>
+                  <div className="selection-actions">
+                    <button type="button" onClick={selectAllInstallments} className="btn-link">
+                      Seleccionar todas
+                    </button>
+                    <button type="button" onClick={clearAllInstallments} className="btn-link">
+                      Limpiar
+                    </button>
+                  </div>
+                </div>
+                {getProductInstallments().length === 0 ? (
+                  <div className="empty-message">No hay cuotas activas para este producto</div>
+                ) : (
+                  <>
+                    <div className="checkbox-grid">
+                      {getProductInstallments().map(inst => (
+                        <label key={inst.id} className="checkbox-card">
+                          <input
+                            type="checkbox"
+                            checked={formData.applicableInstallmentIds.includes(inst.id)}
+                            onChange={() => toggleInstallment(inst.id)}
+                          />
+                          <span className="checkbox-label">{inst.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                    {formData.applicableInstallmentIds.length === 0 && (
+                      <div className="info-message">
+                        ℹ️ Si no seleccionas ninguna cuota, el fee aplicará para todas las cuotas
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
             </>
           )}
 
@@ -372,6 +439,7 @@ function ProductFeeConfigs() {
               <th>Valor</th>
               <th>Montos Aplicables</th>
               <th>Plazos Aplicables</th>
+              <th>Cuotas Aplicables</th>
               <th>Estado</th>
               <th>Acciones</th>
             </tr>
@@ -401,6 +469,17 @@ function ProductFeeConfigs() {
                     <div className="tags-container">
                       {config.applicableTerms.map((t, idx) => (
                         <span key={idx} className="tag">{t.label}</span>
+                      ))}
+                    </div>
+                  )}
+                </td>
+                <td>
+                  {!config.applicableInstallments || config.applicableInstallments.length === 0 ? (
+                    <span className="badge badge-info">Todas</span>
+                  ) : (
+                    <div className="tags-container">
+                      {config.applicableInstallments.map((i, idx) => (
+                        <span key={idx} className="tag">{i.label}</span>
                       ))}
                     </div>
                   )}
