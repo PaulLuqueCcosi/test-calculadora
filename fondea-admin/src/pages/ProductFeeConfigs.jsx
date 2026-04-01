@@ -58,19 +58,23 @@ function ProductFeeConfigs() {
   const loadProductData = async (productId) => {
     if (!productId) {
       setAmounts([]); setTerms([]); setInstallments([]);
-      return;
+      return { amounts: [], terms: [], installments: [], scoreRanges: [] };
     }
     try {
-      const [amountsRes, termsRes, installmentsRes] = await Promise.all([
+      const [amountsRes, termsRes, installmentsRes, scoresRes] = await Promise.all([
         productAmountService.getByProduct(productId),
         productTermService.getByProduct(productId),
         productInstallmentOptionService.getByProduct(productId),
+        creditScoreRangeService.getByProduct(productId),
       ]);
       setAmounts(amountsRes.data);
       setTerms(termsRes.data);
       setInstallments(installmentsRes.data);
+      setScoreRanges(scoresRes.data);
+      return { amounts: amountsRes.data, terms: termsRes.data, installments: installmentsRes.data, scoreRanges: scoresRes.data };
     } catch {
       alert('Error al cargar datos del producto');
+      return { amounts: [], terms: [], installments: [], scoreRanges: [] };
     }
   };
 
@@ -81,8 +85,6 @@ function ProductFeeConfigs() {
         return alert('Debes seleccionar al menos un monto aplicable.');
       if (getProductTerms().length > 0 && formData.applicableTermIds.length === 0)
         return alert('Debes seleccionar al menos un plazo aplicable.');
-      if (getProductScoreRanges().length > 0 && formData.applicableCreditScoreRangeIds.length === 0)
-        return alert('Debes seleccionar al menos un rango de score aplicable.');
       if (getAvailableInstallments().length > 0 && formData.applicableInstallmentIds.length === 0)
         return alert('Debes seleccionar al menos una cuota aplicable.');
     }
@@ -103,31 +105,19 @@ function ProductFeeConfigs() {
     }
   };
 
-  const handleEdit = (config) => {
+  const handleEdit = async (config) => {
     setEditingId(config.id);
-    loadProductData(config.productId);
-    creditScoreRangeService.getByProduct(config.productId).then(r => setScoreRanges(r.data)).catch(() => {});
+    const { amounts: a, terms: t, installments: inst, scoreRanges: sr } = await loadProductData(config.productId);
     setFormData({ 
       productId: config.productId,
       feeDefinitionCode: config.feeDefinitionCode,
       calculationType: config.calculationType,
       value: config.value,
       isActive: config.isActive,
-      applicableAmountIds: config.applicableAmounts?.map(a => {
-        const amount = amounts.find(am => am.amount === a.value && am.productId === config.productId);
-        return amount?.id;
-      }).filter(Boolean) || [],
-      applicableTermIds: config.applicableTerms?.map(t => {
-        const term = terms.find(tm => tm.termDays === t.value && tm.productId === config.productId);
-        return term?.id;
-      }).filter(Boolean) || [],
-      applicableInstallmentIds: config.applicableInstallments?.map(i => {
-        const inst = installments.find(im => im.installmentCount === i.value && im.productId === config.productId);
-        return inst?.id;
-      }).filter(Boolean) || [],
-      applicableCreditScoreRangeIds: scoreRanges
-        .filter(r => r.productId === config.productId && config.applicableInstallments?.some(i => i.availableForCreditScores?.some(s => s.id === r.id)))
-        .map(r => r.id)
+      applicableAmountIds: config.applicableAmounts?.map(ao => a.find(am => am.amount === ao.value)?.id).filter(Boolean) || [],
+      applicableTermIds: config.applicableTerms?.map(to => t.find(tm => tm.termDays === to.value)?.id).filter(Boolean) || [],
+      applicableInstallmentIds: config.applicableInstallments?.map(io => inst.find(im => im.installmentCount === io.value)?.id).filter(Boolean) || [],
+      applicableCreditScoreRangeIds: config.applicableCreditScoreRanges?.map(ro => sr.find(r => r.id === ro.id)?.id).filter(Boolean) || [],
     });
     setShowForm(true);
   };
@@ -178,7 +168,6 @@ function ProductFeeConfigs() {
       applicableAmountIds: prev.applicableAmountIds.includes(amountId)
         ? prev.applicableAmountIds.filter(id => id !== amountId)
         : [...prev.applicableAmountIds, amountId],
-      applicableInstallmentIds: []
     }));
   };
 
@@ -188,50 +177,27 @@ function ProductFeeConfigs() {
       applicableTermIds: prev.applicableTermIds.includes(termId)
         ? prev.applicableTermIds.filter(id => id !== termId)
         : [...prev.applicableTermIds, termId],
-      applicableInstallmentIds: []
     }));
   };
 
   const selectAllAmounts = () => {
-    setFormData(prev => ({ ...prev, applicableAmountIds: getProductAmounts().map(a => a.id), applicableInstallmentIds: [] }));
+    setFormData(prev => ({ ...prev, applicableAmountIds: getProductAmounts().map(a => a.id) }));
   };
 
   const clearAllAmounts = () => {
-    setFormData(prev => ({ ...prev, applicableAmountIds: [], applicableInstallmentIds: [] }));
+    setFormData(prev => ({ ...prev, applicableAmountIds: [] }));
   };
 
   const selectAllTerms = () => {
-    setFormData(prev => ({ ...prev, applicableTermIds: getProductTerms().map(t => t.id), applicableInstallmentIds: [] }));
+    setFormData(prev => ({ ...prev, applicableTermIds: getProductTerms().map(t => t.id) }));
   };
 
   const clearAllTerms = () => {
-    setFormData(prev => ({ ...prev, applicableTermIds: [], applicableInstallmentIds: [] }));
+    setFormData(prev => ({ ...prev, applicableTermIds: [] }));
   };
 
-  const getProductInstallments = () => {
-    return installments.filter(i => i.productId === formData.productId && i.isActive);
-  };
-
-  // Cuotas disponibles según la combinación de montos, plazos y scores ya seleccionados
   const getAvailableInstallments = () => {
-    const all = getProductInstallments();
-    const { applicableAmountIds, applicableTermIds, applicableCreditScoreRangeIds } = formData;
-    if (!applicableAmountIds.length || !applicableTermIds.length || !applicableCreditScoreRangeIds.length) return [];
-
-    // Get the actual amount values and term days for selected IDs
-    const selectedAmountValues = amounts.filter(a => applicableAmountIds.includes(a.id)).map(a => a.amount);
-    const selectedTermValues = terms.filter(t => applicableTermIds.includes(t.id)).map(t => t.termDays);
-    const selectedScoreIds = new Set(applicableCreditScoreRangeIds);
-
-    return all.filter(inst => {
-      const amountOk = !inst.restrictedToAmounts?.length ||
-        inst.restrictedToAmounts.some(v => selectedAmountValues.includes(v));
-      const termOk = !inst.restrictedToTerms?.length ||
-        inst.restrictedToTerms.some(v => selectedTermValues.includes(v));
-      const scoreOk = !inst.restrictedToCreditScoreRanges?.length ||
-        inst.restrictedToCreditScoreRanges.some(r => selectedScoreIds.has(r.id));
-      return amountOk && termOk && scoreOk;
-    });
+    return installments.filter(i => i.productId === formData.productId && i.isActive);
   };
 
   const toggleInstallment = (instId) => {
@@ -261,16 +227,15 @@ function ProductFeeConfigs() {
       applicableCreditScoreRangeIds: prev.applicableCreditScoreRangeIds.includes(rangeId)
         ? prev.applicableCreditScoreRangeIds.filter(id => id !== rangeId)
         : [...prev.applicableCreditScoreRangeIds, rangeId],
-      applicableInstallmentIds: []
     }));
   };
 
   const selectAllScoreRanges = () => {
-    setFormData(prev => ({ ...prev, applicableCreditScoreRangeIds: getProductScoreRanges().map(r => r.id), applicableInstallmentIds: [] }));
+    setFormData(prev => ({ ...prev, applicableCreditScoreRangeIds: getProductScoreRanges().map(r => r.id) }));
   };
 
   const clearAllScoreRanges = () => {
-    setFormData(prev => ({ ...prev, applicableCreditScoreRangeIds: [], applicableInstallmentIds: [] }));
+    setFormData(prev => ({ ...prev, applicableCreditScoreRangeIds: [] }));
   };
 
   if (loading) return <div>Cargando...</div>;
@@ -295,7 +260,6 @@ function ProductFeeConfigs() {
                   const pid = e.target.value;
                   setFormData({ ...formData, productId: pid, applicableAmountIds: [], applicableTermIds: [], applicableInstallmentIds: [], applicableCreditScoreRangeIds: [] });
                   loadProductData(pid);
-                  if (pid) creditScoreRangeService.getByProduct(pid).then(r => setScoreRanges(r.data)).catch(() => {});
                 }}
                 required
               >
@@ -445,11 +409,7 @@ function ProductFeeConfigs() {
                     </button>
                   </div>
                 </div>
-                {!formData.applicableAmountIds.length || !formData.applicableTermIds.length || !formData.applicableCreditScoreRangeIds.length ? (
-                  <div className="info-message">
-                    ℹ️ Primero selecciona montos, plazos y rangos de score para ver las cuotas disponibles
-                  </div>
-                ) : getAvailableInstallments().length === 0 ? (
+                {getAvailableInstallments().length === 0 ? (
                   <div className="empty-message">No hay cuotas compatibles con la combinación seleccionada</div>
                 ) : (
                   <>

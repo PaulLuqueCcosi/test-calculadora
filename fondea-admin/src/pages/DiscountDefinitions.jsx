@@ -3,7 +3,6 @@ import { discountDefinitionService } from '../services/discountService';
 import './CrudPage.css';
 
 const DISCOUNT_TYPES = ['FIRST_LOAN', 'LOYALTY', 'PROMOTIONAL', 'SEASONAL'];
-const CALCULATION_TYPES = ['PERCENTAGE', 'FIXED_AMOUNT'];
 
 function DiscountDefinitions() {
   const [discounts, setDiscounts] = useState([]);
@@ -14,7 +13,6 @@ function DiscountDefinitions() {
     code: '', 
     name: '', 
     type: '', 
-    calculationType: '',
     description: '' 
   });
 
@@ -54,7 +52,6 @@ function DiscountDefinitions() {
       code: discount.code, 
       name: discount.name, 
       type: discount.type,
-      calculationType: discount.calculationType,
       description: discount.description || '' 
     });
     setShowForm(true);
@@ -72,7 +69,7 @@ function DiscountDefinitions() {
   };
 
   const resetForm = () => {
-    setFormData({ code: '', name: '', type: '', calculationType: '', description: '' });
+    setFormData({ code: '', name: '', type: '', description: '' });
     setEditingCode(null);
     setShowForm(false);
   };
@@ -128,19 +125,6 @@ function DiscountDefinitions() {
             </select>
           </div>
           <div className="form-group">
-            <label>Tipo de Cálculo:</label>
-            <select
-              value={formData.calculationType}
-              onChange={(e) => setFormData({ ...formData, calculationType: e.target.value })}
-              required
-            >
-              <option value="">Seleccionar tipo</option>
-              {CALCULATION_TYPES.map(type => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
-          </div>
-          <div className="form-group">
             <label>Descripción:</label>
             <textarea
               value={formData.description}
@@ -166,7 +150,6 @@ function DiscountDefinitions() {
               <th>Código</th>
               <th>Nombre</th>
               <th>Tipo</th>
-              <th>Cálculo</th>
               <th>Descripción</th>
               <th>Acciones</th>
             </tr>
@@ -177,7 +160,6 @@ function DiscountDefinitions() {
                 <td><code>{discount.code}</code></td>
                 <td>{discount.name}</td>
                 <td><span className="badge badge-success">{discount.type}</span></td>
-                <td>{discount.calculationType}</td>
                 <td>{discount.description}</td>
                 <td>
                   <button onClick={() => handleEdit(discount)} className="btn-edit">
