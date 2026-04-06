@@ -243,10 +243,14 @@ function ProductFeeConfigs() {
   return (
     <div className="crud-page">
       <div className="page-header">
-        <h1>Configuración de Fees</h1>
+        <h1>Fee Configs (Detalle)</h1>
         <button onClick={() => setShowForm(!showForm)} className="btn-primary">
-          {showForm ? 'Cancelar' : 'Nueva Configuración'}
+          {showForm ? 'Cancelar' : 'Nueva Configuración Manual'}
         </button>
+      </div>
+
+      <div className="info-banner">
+        💡 Estos configs son generados automáticamente por los <strong>Grupos de Comisiones</strong>. Solo crea configs manuales si necesitas un fee individual sin grupo.
       </div>
 
       {showForm && (

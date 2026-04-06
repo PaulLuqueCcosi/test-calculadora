@@ -44,7 +44,8 @@ const menuPhases = [
     title: 'Fees y Descuentos',
     hint: 'Configurar por producto',
     items: [
-      { to: '/product-fee-configs', label: 'Config. de Fees', icon: '⚙️' },
+      { to: '/product-fee-groups', label: 'Grupos de Comisiones', icon: '⚙️' },
+      { to: '/product-fee-configs', label: 'Fee Configs (detalle)', icon: '🔍' },
       { to: '/product-discount-configs', label: 'Config. de Descuentos', icon: '🔧' },
     ]
   },

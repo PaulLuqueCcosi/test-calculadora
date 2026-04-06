@@ -8,6 +8,14 @@ export const feeDefinitionService = {
   delete: (code) => api.delete(`/v1/fee-definitions/${code}`),
 };
 
+export const productFeeGroupService = {
+  getAll: (productId) => api.get('/v1/product-fee-groups', { params: productId ? { productId } : {} }),
+  getById: (id) => api.get(`/v1/product-fee-groups/${id}`),
+  create: (data) => api.post('/v1/product-fee-groups', data),
+  update: (id, data) => api.put(`/v1/product-fee-groups/${id}`, data),
+  delete: (id) => api.delete(`/v1/product-fee-groups/${id}`),
+};
+
 export const productFeeConfigService = {
   getAll: () => api.get('/v1/product-fee-configs'),
   getById: (id) => api.get(`/v1/product-fee-configs/${id}`),

@@ -36,10 +36,10 @@ const PHASES = [
   {
     phase: 4,
     title: 'Fees y Descuentos por Producto',
-    description: 'Asocia fees y descuentos al producto, especificando a qué montos, plazos, cuotas y scores aplica cada uno.',
+    description: 'Crea grupos de comisiones con splits por fee definition. El sistema genera automáticamente los ProductFeeConfig hijos. Luego configura los descuentos opcionales.',
     color: '#e65100',
     links: [
-      { to: '/product-fee-configs', label: 'Config. de Fees', icon: '⚙️' },
+      { to: '/product-fee-groups', label: 'Grupos de Comisiones', icon: '⚙️' },
       { to: '/product-discount-configs', label: 'Config. de Descuentos', icon: '🔧' },
     ]
   },

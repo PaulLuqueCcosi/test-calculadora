@@ -260,3 +260,46 @@ table td .tags-container {
     gap: 10px;
   }
 }
+
+/* Fee Groups - Splits */
+.split-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: white;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  margin-bottom: 10px;
+}
+
+.splits-total {
+  padding: 10px 15px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.splits-total--ok {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+}
+
+.splits-total--error {
+  background: #fdecea;
+  color: #c62828;
+  border: 1px solid #ef9a9a;
+}
+
+/* Info banner */
+.info-banner {
+  background: #e3f2fd;
+  color: #1565c0;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border-left: 4px solid #1976d2;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
