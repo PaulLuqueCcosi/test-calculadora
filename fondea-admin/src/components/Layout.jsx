@@ -9,6 +9,7 @@ const menuPhases = [
     items: [
       { to: '/', label: 'Dashboard', icon: '🏠', end: true },
       { to: '/simulator', label: 'Simulador', icon: '🧮' },
+      { href: import.meta.env.VITE_CALCULATOR_URL, label: 'Calculadora', icon: '🔗', external: true },
     ]
   },
   {
@@ -87,15 +88,22 @@ function Layout() {
             {!collapsed[section.phase] && (
               <ul>
                 {section.items.map(item => (
-                  <li key={item.to}>
-                    <NavLink
-                      to={item.to}
-                      end={item.end}
-                      className={({ isActive }) => isActive ? 'active' : ''}
-                    >
-                      <span className="nav-icon">{item.icon}</span>
-                      {item.label}
-                    </NavLink>
+                  <li key={item.to || item.href}>
+                    {item.external ? (
+                      <a href={item.href} target="_blank" rel="noopener noreferrer">
+                        <span className="nav-icon">{item.icon}</span>
+                        {item.label}
+                      </a>
+                    ) : (
+                      <NavLink
+                        to={item.to}
+                        end={item.end}
+                        className={({ isActive }) => isActive ? 'active' : ''}
+                      >
+                        <span className="nav-icon">{item.icon}</span>
+                        {item.label}
+                      </NavLink>
+                    )}
                   </li>
                 ))}
               </ul>
