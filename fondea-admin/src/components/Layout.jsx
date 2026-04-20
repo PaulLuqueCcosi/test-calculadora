@@ -9,6 +9,7 @@ const menuPhases = [
     items: [
       { to: '/', label: 'Dashboard', icon: '🏠', end: true },
       { to: '/simulator', label: 'Simulador', icon: '🧮' },
+      { to: '/landing-contacts', label: 'Envíos Contacto', icon: '📨' },
       { href: import.meta.env.VITE_CALCULATOR_URL, label: 'Calculadora', icon: '🔗', external: true },
     ]
   },

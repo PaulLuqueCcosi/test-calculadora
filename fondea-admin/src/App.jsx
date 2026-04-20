@@ -12,6 +12,7 @@ import ProductFeeConfigs from './pages/ProductFeeConfigs';
 import DiscountDefinitions from './pages/DiscountDefinitions';
 import ProductDiscountConfigs from './pages/ProductDiscountConfigs';
 import Simulator from './pages/Simulator';
+import LandingContacts from './pages/LandingContacts';
 import './App.css';
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
           <Route path="discount-definitions" element={<DiscountDefinitions />} />
           <Route path="product-discount-configs" element={<ProductDiscountConfigs />} />
           <Route path="simulator" element={<Simulator />} />
+          <Route path="landing-contacts" element={<LandingContacts />} />
         </Route>
       </Routes>
     </BrowserRouter>
