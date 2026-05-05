@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
+import { getToken, setToken } from '../config/api';
 import './Layout.css';
 
 const menuPhases = [
@@ -55,9 +56,20 @@ const menuPhases = [
 
 function Layout() {
   const [collapsed, setCollapsed] = useState({});
+  const [tokenInput, setTokenInput] = useState(getToken() || '');
+  const [showToken, setShowToken] = useState(false);
 
   const togglePhase = (phase) => {
     setCollapsed(prev => ({ ...prev, [phase]: !prev[phase] }));
+  };
+
+  const handleTokenSave = () => {
+    setToken(tokenInput.trim());
+  };
+
+  const handleTokenClear = () => {
+    setTokenInput('');
+    setToken(null);
   };
 
   return (
@@ -66,6 +78,29 @@ function Layout() {
         <div className="sidebar-brand">
           <span className="brand-icon">🏦</span>
           <span className="brand-name">Fondea Admin</span>
+        </div>
+
+        <div className="token-section">
+          <div className="token-header" onClick={() => setShowToken(!showToken)} style={{ cursor: 'pointer' }}>
+            <span>{getToken() ? '🔒' : '🔓'} Token API</span>
+            <span className="section-toggle">{showToken ? '▾' : '▸'}</span>
+          </div>
+          {showToken && (
+            <div className="token-body">
+              <input
+                type="password"
+                placeholder="Pegar token aquí..."
+                value={tokenInput}
+                onChange={(e) => setTokenInput(e.target.value)}
+                className="token-input"
+              />
+              <div className="token-actions">
+                <button onClick={handleTokenSave} className="token-btn token-btn--save">Guardar</button>
+                <button onClick={handleTokenClear} className="token-btn token-btn--clear">Limpiar</button>
+              </div>
+              {getToken() && <span className="token-status">✅ Token guardado</span>}
+            </div>
+          )}
         </div>
 
         {menuPhases.map((section) => (
